@@ -3,12 +3,18 @@ import time
 import email
 import imaplib
 from conf import Env
+from datetime import datetime
 
 
 
 class MaglinkFetcher:
     def __init__(self, config_path: str = "configuration.toml", env: Env = None):
-        self.links = []
+        self.links = [{
+            "title": "Nothing New yet!",
+            "timestamp": datetime.now().isoformat(),
+            "detail": "No new notifications found",
+            "isUnread": True
+        }]
         self.env = env or Env().from_toml(config_path).from_env().from_argv()
         self._connect()
 
@@ -61,12 +67,17 @@ class MaglinkFetcher:
     def mark_last20_read(self):
         for maglink in self.links[-20:]:
             maglink["isUnread"] = False
+    
+    def reduce_links(self):
+        for i in range(self.env.reduce_links):
+            self.links.pop(-1)
 
     def poll_once(self):
         try:
             maglinks = self._collect_maglinks()
             if len(self.links) < self.env.max_linkcache:
                 self.links.extend(maglinks)
+            else:self.reduce_links()
             return maglinks
         except Exception:
             return []
@@ -79,7 +90,9 @@ class MaglinkFetcher:
 
     def last_20(self):
         last_20_ = self.links[-20:]
-        self.mark_last20_read()
+        # Only mark real maglinks as read, not the default "Nothing New yet!" notification
+        real_maglinks = [link for link in last_20_ if link["title"] != "Nothing New yet!"]
+        self.mark_read(real_maglinks)
         return last_20_
 
 

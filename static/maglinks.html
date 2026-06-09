@@ -3,128 +3,288 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Real-Time Push Notifications</title>
+  <title>Magic Link Push Notification</title>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f4f5f7;
+    * {
       margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-    }
-
-    #notification-container {
-      width: 100%;
-      max-width: calc(100vw - 40px);
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      padding: 16px;
+      padding: 0;
       box-sizing: border-box;
     }
 
-    .header-container {
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    .app-bar {
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .app-bar-content {
+      max-width: 800px;
+      margin: 0 auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
     }
 
-    .header {
-      margin: 0;
-      font-size: 18px;
-      color: #111;
+    .app-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
 
-    .reload-btn {
-      background: #eef0f2;
-      border: none;
-      border-radius: 6px;
+    .app-bar h1 {
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: #202124;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .config-badge {
+      background: #e8f0fe;
+      border: 1px solid #d2e3fc;
+      border-radius: 16px;
       padding: 6px 12px;
-      font-size: 14px;
+      font-size: 0.75rem;
+      color: #1967d2;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .config-badge-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .config-divider {
+      color: #dadce0;
+    }
+
+    .refresh-btn {
+      background: transparent;
+      border: 1px solid #dadce0;
+      border-radius: 20px;
+      padding: 8px 16px;
       cursor: pointer;
-      transition: background 0.2s;
+      font-size: 0.875rem;
+      color: #5f6368;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .reload-btn:hover {
-      background: #e2e5e8;
+    .refresh-btn:hover {
+      background: #f8f9fa;
+      border-color: #c0c0c0;
     }
 
-    .notification-list {
+    .refresh-btn:active {
+      background: #e8eaed;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 16px 20px;
+    }
+
+    .status-text {
+      color: #5f6368;
+      font-size: 0.875rem;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+
+    #notification-list {
       display: flex;
       flex-direction: column;
+      gap: 8px;
     }
 
     .notification-card {
-      position: relative;
-      padding: 12px 16px;
-      margin-bottom: 10px;
-      border: 1px solid #eef0f2;
+      background: white;
       border-radius: 8px;
-      background: #fff;
+      padding: 16px;
+      box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+      transition: all 0.2s;
+      position: relative;
+      border-left: 4px solid transparent;
     }
 
-    .notification-card:last-child {
-      margin-bottom: 0;
+    .notification-card:hover {
+      box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
     }
 
     .notification-card.unread {
-      border-left: 4px solid #007bff;
-      background: #f8faff;
+      border-left-color: #1a73e8;
+      background: #f8fbff;
+    }
+
+    .notification-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
     }
 
     .notification-title {
-      margin: 0 0 4px 0;
-      font-size: 14px;
-      font-weight: 600;
-      color: #222;
-      padding-right: 24px;
+      color: #202124;
+      font-size: 1rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .notification-detail {
-      margin: 0 0 8px 0;
-      font-size: 13px;
-      color: #555;
-      line-height: 1.4;
-      padding-right: 24px;
+    .unread-badge {
+      width: 8px;
+      height: 8px;
+      background: #1a73e8;
+      border-radius: 50%;
+      display: none;
     }
 
-    .notification-time {
-      font-size: 11px;
-      color: #888;
+    .notification-card.unread .unread-badge {
       display: block;
     }
 
-    .copy-btn {
-      position: absolute;
-      right: 12px;
-      bottom: 12px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      padding: 4px;
-      opacity: 0.6;
-      transition: opacity 0.2s;
+    .notification-time {
+      color: #5f6368;
+      font-size: 0.75rem;
+      white-space: nowrap;
     }
 
-    .copy-btn:hover {
-      opacity: 1;
+    .notification-detail {
+      color: #5f6368;
+      font-size: 0.875rem;
+      margin-bottom: 12px;
+      word-break: break-all;
+      line-height: 1.4;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+
+    .notification-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .action-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #1a73e8;
+      transition: background 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.25px;
+    }
+
+    .action-btn:hover {
+      background: #e8f0fe;
+    }
+
+    .action-btn:active {
+      background: #d2e3fc;
+    }
+
+    .action-btn.copied {
+      color: #137333;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: #5f6368;
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state-text {
+      font-size: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      .app-bar {
+        padding: 12px 16px;
+      }
+
+      .app-bar h1 {
+        font-size: 1.125rem;
+      }
+
+      .container {
+        padding: 12px 16px;
+      }
+
+      .notification-card {
+        padding: 12px;
+      }
+
+      .notification-header {
+        flex-direction: column;
+        gap: 4px;
+      }
     }
   </style>
 </head>
 <body>
-
-  <div id="notification-container">
-    <div class="header-container">
-      <h3 class="header">Notifications</h3>
-      <button class="reload-btn" id="reload-btn">🔄 Force Fetch</button>
+  <div class="app-bar">
+    <div class="app-bar-content">
+      <div class="app-bar-left">
+        <h1>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#5f6368"/>
+          </svg>
+          Magic Links
+        </h1>
+        <div class="config-badge">
+          <div class="config-badge-text">
+            <span>loginrevoked@gmail.com</span>
+            <span class="config-divider">•</span>
+            <span>Every 60s</span>
+          </div>
+        </div>
+      </div>
+      <button id="reload-btn" class="refresh-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+        </svg>
+        Refresh
+      </button>
     </div>
-    <div id="notification-list" class="notification-list"></div>
   </div>
 
-  <script src="app.js"></script>
+  <div class="container">
+    <div class="status-text">Auto-refresh every 60s</div>
+    <div id="notification-list">
+      <div class="empty-state">
+        <div class="empty-state-icon">⏳</div>
+        <div class="empty-state-text">Loading notifications...</div>
+      </div>
+    </div>
+  </div>
 
+  <script src="/static/app.js"></script>
 </body>
 </html>

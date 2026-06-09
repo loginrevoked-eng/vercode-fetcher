@@ -19,7 +19,11 @@ class Env:
     poll_interval: int = field(default=60)
     max_linkcache: int = field(default=100)
     notification_title: str = field(default="Magic Link Push Notification")
-    home_page: str = field(default="index.html")
+    home_page: str = field(default="static/maglinks.html")
+    app_title: str = field(default="Magic Link Push Notification")
+    poll_url: str = field(default="/notifications")
+    appjs: str = field(default="static/app.js")
+    reduce_links: int = field(default=10)
 
     @staticmethod
     def read_file(path: str) -> str | None:
@@ -29,7 +33,10 @@ class Env:
             return f.read()
 
     def _validate(self) -> "Env":
-        for fname, val in self.__dict__.items():
+        # Only validate required email/IMAP fields
+        required_fields = ["email", "imap_host", "email_password", "maglink_regex", "filter_query"]
+        for fname in required_fields:
+            val = self.__dict__.get(fname)
             if val is None or val == "":
                 raise ValueError(f"{fname} is missing or empty")
         return self
@@ -47,6 +54,9 @@ class Env:
         if os.getenv("MAX_LINKCACHE"): self.max_linkcache = int(os.getenv("MAX_LINKCACHE"))
         if os.getenv("NOTIFICATION_TITLE"): self.notification_title = os.getenv("NOTIFICATION_TITLE")
         if os.getenv("HOME_PAGE"): self.home_page = os.getenv("HOME_PAGE")
+        if os.getenv("APP_TITLE"): self.app_title = os.getenv("APP_TITLE")
+        if os.getenv("POLL_URL"): self.poll_url = os.getenv("POLL_URL")
+        if os.getenv("APPJS"): self.appjs = os.getenv("APPJS")
         return self._validate()
 
     def from_dict(self, data: dict) -> "Env":
@@ -61,7 +71,11 @@ class Env:
         self.poll_interval = data.get("poll_interval", 60)
         self.max_linkcache = data.get("max_linkcache", 100)
         self.notification_title = data.get("notification_title", "Magic Link Push Notification")
-        self.home_page = data.get("home_page", "index.html")
+        self.home_page = data.get("home_page", "static/maglinks.html")
+        self.app_title = data.get("app_title", "Magic Link Push Notification")
+        self.poll_url = data.get("poll_url", "/notifications")
+        self.appjs = data.get("appjs", "static/app.js")
+        self.reduce_links = data.get("reduce_links", 10)
         return self._validate()
 
     def from_toml(self, path: str) -> "Env":
@@ -88,6 +102,12 @@ class Env:
         parser.add_argument("--vercode-regex", type=str)
         parser.add_argument("--poll-interval", type=int)
         parser.add_argument("--max-linkcache", type=int)
+        parser.add_argument("--home-page", type=str)
+        parser.add_argument("--app-title", type=str)
+        parser.add_argument("--poll-url", type=str)
+        parser.add_argument("--appjs", type=str)
+        parser.add_argument("--notification-title", type=str)
+        parser.add_argument("--reduce-links", type=int)
         args = parser.parse_args()
         if args.email: self.email = args.email
         if args.password: self.password = args.password
@@ -99,6 +119,10 @@ class Env:
         if args.vercode_regex: self.vercode_regex = args.vercode_regex
         if args.poll_interval: self.poll_interval = args.poll_interval
         if args.max_linkcache: self.max_linkcache = args.max_linkcache
-        if args.notification_title: self.notification_title = args.notification_title
         if args.home_page: self.home_page = args.home_page
+        if args.app_title: self.app_title = args.app_title
+        if args.poll_url: self.poll_url = args.poll_url
+        if args.appjs: self.appjs = args.appjs
+        if args.notification_title: self.notification_title = args.notification_title
+        if args.reduce_links: self.reduce_links = args.reduce_links
         return self._validate()

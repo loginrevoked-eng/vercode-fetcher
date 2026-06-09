@@ -1,6 +1,6 @@
-const POLL_URL      = "{POLL_URL}";
-const POLL_INTERVAL = "{POLL_INTERVAL}";
-const PAGE_TITLE    = "{PAGE_TITLE}";
+const POLL_URL      = "/notifications";
+const POLL_INTERVAL = "60";
+const PAGE_TITLE    = "Magic Link Push Notification";
 
 let pollTimer;
 
@@ -30,16 +30,27 @@ function addNotification({ title, detail, timestamp, isUnread = false }) {
   const card = document.createElement("div");
   card.className = `notification-card ${isUnread ? "unread" : ""}`;
   card.innerHTML = `
-    <h4 class="notification-title">${title}</h4>
-    <p class="notification-detail">${detail}</p>
-    <span class="notification-time" data-timestamp="${timestamp}">${timeAgo(new Date(timestamp))}</span>
-    <button class="copy-btn" title="Copy detail">📋</button>
+    <div class="notification-header">
+      <div class="notification-title">
+        <span class="unread-badge"></span>
+        ${title}
+      </div>
+      <span class="notification-time" data-timestamp="${timestamp}">${timeAgo(new Date(timestamp))}</span>
+    </div>
+    <div class="notification-detail">${detail}</div>
+    <div class="notification-actions">
+      <button class="action-btn copy-btn">Copy Link</button>
+    </div>
   `;
 
   card.querySelector(".copy-btn").addEventListener("click", (e) => {
     navigator.clipboard.writeText(detail).then(() => {
-      e.target.innerText = "✅";
-      setTimeout(() => (e.target.innerText = "📋"), 1500);
+      e.target.innerText = "Copied";
+      e.target.classList.add("copied");
+      setTimeout(() => {
+        e.target.innerText = "Copy Link";
+        e.target.classList.remove("copied");
+      }, 2000);
     });
   });
 
@@ -71,7 +82,7 @@ async function fetchNotifications() {
 function startPolling() {
   stopPolling();
   fetchNotifications();
-  pollTimer = setInterval(fetchNotifications, POLL_INTERVAL);
+  pollTimer = setInterval(fetchNotifications, POLL_INTERVAL * 1000);
 }
 
 function stopPolling() {
