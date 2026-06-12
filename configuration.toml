@@ -14,3 +14,5 @@ notification_title = "New Magic Link"
 poll_url = "/notifications"
 appjs = "static/app.js"
 homepage = "static/maglinks.html"
+port = 8080
+host = "0.0.0.0"
