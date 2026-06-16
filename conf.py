@@ -12,7 +12,7 @@ class Env:
     maglink_regex: str = field(default="")
     imap_host: str = field(default="")
     email_password: str = field(default="")
-    filter_query: str = field(default="")
+    imap_filter_query: str = field(default="")
     vercode_pagemarker: str = field(default="")
     vercode_regex: str = field(default="")
     poll_interval: int = field(default=60)
@@ -26,6 +26,17 @@ class Env:
     host: str = field(default="127.0.0.1")
     port: int = field(default=8000)
     is_deployed: bool = field(default=False)
+    poll_endpoint: str = field(default="/notifications")
+    imap_reconnect_retries: int = field(default=3)
+
+
+    def from_file(self, path: str) -> "Env":
+        if path.endswith(".toml"):
+            return self.from_toml(path)
+        elif path.endswith(".json"):
+            return self.from_json(path)
+        else:
+            raise ValueError(f"Unsupported file format: {path}")
 
     def _set(self, name: str, value) -> None:
         if value is None:
@@ -47,7 +58,7 @@ class Env:
             return f.read()
 
     def _validate(self) -> "Env":
-        required = ["email", "imap_host", "email_password", "maglink_regex", "filter_query"]
+        required = ["email", "imap_host", "email_password", "maglink_regex", "imap_filter_query"]
         for name in required:
             if not getattr(self, name, None):
                 raise ValueError(f"{name} is missing or empty")

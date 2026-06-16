@@ -9,14 +9,15 @@ from maglink_fetch import MaglinkFetcher
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
-env = Env().from_toml("configuration.toml")
+env = Env().from_toml("configuration.toml").from_env().from_argv()
 maglinkFetcher = MaglinkFetcher(env=env)
 template = Template(js=env.appjs, html=env.home_page)
 template.format([
     Fmt(placeholder="POLL_INTERVAL", replacement=str(env.poll_interval)),
     Fmt(placeholder="POLL_URL", replacement=env.poll_url),
     Fmt(placeholder="PAGE_TITLE", replacement=env.app_title),
-    Fmt(placeholder="EMAIL", replacement=env.email)
+    Fmt(placeholder="EMAIL", replacement=env.email),
+    Fmt(placeholder="POLL_ENDPOINT", replacement=env.poll_endpoint)
 ])
 template.write_all()
 
@@ -25,9 +26,9 @@ template.write_all()
 async def display_maglinks(request: Request):
     return HTMLResponse(template.html())
 
-@app.get("/notifications")
+@app.get(env.poll_endpoint)
 async def push_notification(request:Request):
     maglinkFetcher.poll_once()
-    return JSONResponse(content=maglinkFetcher.last_20(), status_code=200)
+    return JSONResponse(content=maglinkFetcher.subfeed(), status_code=200)
 
 

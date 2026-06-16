@@ -1,4 +1,4 @@
-const POLL_URL      = "/notifications";
+const POLL_URL      = POLL_ENDPOINT;
 const POLL_INTERVAL = "60";
 const PAGE_TITLE    = "Magic Link Push Notification";
 
@@ -75,7 +75,7 @@ async function fetchNotifications() {
     }
   } catch (error) {
     console.error("Fetch failed:", error);
-    list.innerHTML = `<p style="color: red; text-align: center; padding: 20px;">Error: ${error.message}<br>Make sure server is running on port 8001</p>`;
+    list.innerHTML = `<p style="color: red; text-align: center; padding: 20px;">Error: ${error.message}<br> Check if server is actually running</p>`;
   }
 }
 
