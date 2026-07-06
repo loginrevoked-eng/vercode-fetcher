@@ -1,0 +1,22 @@
+{
+  "email": "clarkmcvell@gmail.com",
+  "email_password": "azcc nudj uidr djml",
+  "imap_host": "imap.gmail.com",
+  "google_authenticator_secret": "appj fa6u x7fg zvmj qde4 lcie d2yy axrn",
+  "providers": {
+    "claude": {
+      "enabled": true,
+      "imap_filter_query": "UNSEEN FROM \"anthropic.com\"",
+      "maglink_regex": "https://claude\\.ai/magic-link#[a-f0-9]{32}:[A-Za-z0-9+/=]+",
+      "vercode_regex": "Your Anthropic verification code is: (\\d{6})",
+      "vercode_pagemarker": "Use verification code to continue"
+    },
+    "chatgpt": {
+      "enabled": true,
+      "imap_filter_query": "UNSEEN FROM \"tm.openai.com\"",
+      "maglink_regex": "verification code to continue:[\\s\\S]*?(\\d{6})",
+      "vercode_regex": "verification code:?\\s*(\\d{6})",
+      "vercode_pagemarker": "verification code"
+    }
+  }
+}

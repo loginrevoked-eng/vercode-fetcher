@@ -1,6 +1,13 @@
-const POLL_URL      = POLL_ENDPOINT;
-const POLL_INTERVAL = "60";
-const PAGE_TITLE    = "Magic Link Push Notification";
+// Extract username and provider from URL path
+// URL format: /username/provider (will append @gmail.com)
+const pathParts = window.location.pathname.split('/').filter(p => p);
+const username = pathParts[0] || '';
+const provider = pathParts[1] || '';
+const subscriber = `${username}@gmail.com`;
+
+const POLL_INTERVAL = 60; // seconds
+const POLL_URL = `/api/notifications/${username}/${provider}`;
+const PAGE_TITLE = `${provider.charAt(0).toUpperCase() + provider.slice(1)} - ${subscriber}`;
 
 let pollTimer;
 
@@ -23,10 +30,11 @@ function timeAgo(date) {
 }
 
 
-function addNotification({ title, detail, timestamp, isUnread = false }) {
+function addNotification({ title, detail, timestamp, read }) {
   const list = document.getElementById("notification-list");
   if (!list) return;
 
+  const isUnread = !read;
   const card = document.createElement("div");
   card.className = `notification-card ${isUnread ? "unread" : ""}`;
   card.innerHTML = `
@@ -69,14 +77,36 @@ async function fetchNotifications() {
     list.innerHTML = "";
 
     if (notifications.length === 0) {
-      list.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No notifications</p>';
+      list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No notifications yet</div></div>';
     } else {
-      notifications.forEach((noti) => addNotification(noti));
+      notifications.reverse().forEach((noti) => addNotification(noti));
     }
   } catch (error) {
     console.error("Fetch failed:", error);
-    list.innerHTML = `<p style="color: red; text-align: center; padding: 20px;">Error: ${error.message}<br> Check if server is actually running</p>`;
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text" style="color: #d93025;">Error: ${error.message}<br><small>Check if server is running</small></div></div>`;
   }
+}
+
+function updatePageInfo() {
+  document.title = PAGE_TITLE;
+  document.querySelector('.app-bar h1').innerHTML = `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#5f6368"/>
+    </svg>
+    ${provider.charAt(0).toUpperCase() + provider.slice(1)} Magic Links
+  `;
+  
+  document.querySelector('.config-badge').innerHTML = `
+    <div class="config-badge-text">
+      <span>${subscriber}</span>
+      <span class="config-divider">•</span>
+      <span>${provider}</span>
+      <span class="config-divider">•</span>
+      <span>Every ${POLL_INTERVAL}s</span>
+    </div>
+  `;
+  
+  document.querySelector('.status-text').textContent = `Auto-refresh every ${POLL_INTERVAL}s`;
 }
 
 function startPolling() {
@@ -93,8 +123,8 @@ function stopPolling() {
 }
 
 function main() {
+  updatePageInfo();
   document.getElementById("reload-btn").addEventListener("click", fetchNotifications);
-  document.title = PAGE_TITLE;
   startPolling();
 }
 
